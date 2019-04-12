@@ -1,4 +1,4 @@
-import { ACM, Route53 } from "aws-sdk";
+import { ACM, Config, Route53, TemporaryCredentials } from "aws-sdk";
 
 export interface ServerlessInstance {
   service: {
@@ -18,6 +18,7 @@ export interface ServerlessInstance {
         domainName: string;
         domainNames: string[];
         cloudFront: string;
+        route53Role: string;
       };
     };
   };
@@ -27,6 +28,8 @@ export interface ServerlessInstance {
         Route53: typeof Route53;
         CloudFormation: any;
         ACM: typeof ACM;
+        TemporaryCredentials: typeof TemporaryCredentials;
+        Config: typeof Config;
       };
       getCredentials();
       getRegion();

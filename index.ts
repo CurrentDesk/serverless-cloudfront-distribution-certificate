@@ -1,5 +1,5 @@
 import * as aws from "aws-sdk";
-import { Route53 } from "aws-sdk";
+import { Route53, TemporaryCredentials } from "aws-sdk";
 import { Arn } from "aws-sdk/clients/acm";
 import { ServerlessInstance } from "./ServerlessInstance";
 import { ServerlessOptions } from "./ServerlessOptions";
@@ -94,8 +94,35 @@ class ServerlessCloudfrontDistributionCertificate {
         ValidationStatus === "PENDING_VALIDATION" && ValidationMethod === "DNS",
     );
 
+    if (validations.length === 0) {
+      this.serverless.cli.log(
+        "Waiting for DNS entries to be generated. Will check again in 10 seconds.",
+      );
+      const wait = new Promise((r) => setTimeout(r, 10000));
+      await wait;
+      this.checkAndCreateRoute53Entry();
+    }
+
     const credentials = this.serverless.providers.aws.getCredentials();
-    this.route53 = new this.serverless.providers.aws.sdk.Route53(credentials);
+    const tempCredParams: TemporaryCredentials.TemporaryCredentialsOptions = {
+      RoleArn: this.serverless.service.custom.cfdDomain.route53Role,
+      RoleSessionName: "sls-cfd-cert",
+    };
+    const tempCreds = new this.serverless.providers.aws.sdk.TemporaryCredentials(
+      tempCredParams,
+    );
+    await tempCreds.getPromise();
+
+    const data = {
+      credentials: {
+        expired: tempCreds.expired,
+        expireTime: tempCreds.expireTime,
+        accessKeyId: tempCreds.accessKeyId,
+        sessionToken: tempCreds.sessionToken,
+        secretAccessKey: tempCreds.secretAccessKey,
+      },
+    };
+    this.route53 = new this.serverless.providers.aws.sdk.Route53(data);
 
     const validationPromises = validations.map(async (validation) => {
       this.serverless.cli.log(`Validating certificate`);
