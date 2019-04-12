@@ -8,6 +8,21 @@ This serverless plugin manages to create certificate for specified CloudFront di
 
 ## Usage
 
+### CurrentDesk Installation Notes
+
+1. ```bash
+   git clone git@github.com:CurrentDesk/serverless-cloudfront-distribution-certificate.git
+   ```
+2. ```bash
+   yarn install
+   yarn build
+   yarn link
+   ```
+3. Projects utilizing serverless-cloudfront-distribution-certificate will need to run this command:
+   ```bash
+   yarn link serverless-cloudfront-distribution-certificate
+   ```
+
 ### Installation
 
 ```bash
